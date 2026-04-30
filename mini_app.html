@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduTrack — Gestion des Étudiants</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --accent: #e8734a;
+      --accent-light: #fdf0eb;
+      --surface: #f7f5f2;
+      --card-bg: #ffffff;
+      --text-main: #1c1c1c;
+      --text-muted: #6b6b6b;
+      --border: #e2ddd8;
+      --success-bg: #edf7f0;
+      --success-text: #1e6b3c;
+      --danger-bg: #fdf0ee;
+      --danger-text: #b93825;
+      --badge-excellent: #e9f5e9;
+      --badge-excellent-text: #2d7a3a;
+      --badge-good: #e8f0fd;
+      --badge-good-text: #1a4a9e;
+      --badge-average: #fff8e6;
+      --badge-average-text: #8a6200;
+      --badge-fail: #fdeaea;
+      --badge-fail-text: #9e2020;
+      --nav-height: 64px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--text-main);
+      min-height: 100vh;
+      margin: 0;
+    }
+    /* ── NAV ── */
+    .navbar {
+      background: var(--primary);
+      height: var(--nav-height);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(0,0,0,.18);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .navbar-brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem;
+      color: #fff;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .navbar-brand span { color: var(--accent); }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-btn {
+      color: rgba(255,255,255,.75);
+      background: none; border: none;
+      padding: 8px 16px; border-radius: 8px;
+      font-size: .88rem; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .nav-btn:hover { color: #fff; background: rgba(255,255,255,.1); }
+    .nav-btn.active { color: #fff; background: var(--accent); }
+    /* ── PAGES ── */
+    .page { display: none; padding: 2.5rem 1rem; max-width: 960px; margin: 0 auto; }
+    .page.active { display: block; }
+    /* ── HERO ── */
+    .hero {
+      background: var(--primary);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      color: #fff;
+      margin-bottom: 2rem;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content:'';
+      position: absolute; top:-40px; right:-40px;
+      width: 220px; height: 220px;
+      background: var(--accent); opacity: .12;
+      border-radius: 50%;
+    }
+    .hero::after {
+      content:'';
+      position: absolute; bottom:-60px; right:60px;
+      width: 150px; height: 150px;
+      background: #fff; opacity: .05;
+      border-radius: 50%;
+    }
+    .hero h1 { font-family: 'DM Serif Display', serif; font-size: 2.2rem; margin-bottom: .5rem; }
+    .hero p { opacity: .75; font-size: .95rem; margin: 0; max-width: 440px; }
+    .stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: var(--card-bg); border-radius: 12px;
+      padding: 1.5rem; border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .stat-icon.blue { background: #e8f0fd; color: #1a4a9e; }
+    .stat-icon.orange { background: var(--accent-light); color: var(--accent); }
+    .stat-icon.green { background: var(--success-bg); color: var(--success-text); }
+    .stat-number { font-size: 1.8rem; font-weight: 600; line-height: 1; }
+    .stat-label { font-size: .8rem; color: var(--text-muted); margin-top: 2px; }
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem; color: var(--primary);
+      margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1; height: 1px;
+      background: var(--border);
+      margin-left: 8px;
+    }
+    /* ── CARD ── */
+    .card-panel {
+      background: var(--card-bg);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    /* ── FORM ── */
+    .form-label { font-size: .85rem; font-weight: 500; color: var(--text-main); margin-bottom: 4px; }
+    .form-control, .form-select {
+      border: 1.5px solid var(--border);
+      border-radius: 8px; padding: .55rem .9rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem; transition: border-color .15s, box-shadow .15s;
+      background: #fff;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(232,115,74,.15);
+      outline: none;
+    }
+    .form-control.is-invalid { border-color: #dc3545; }
+    .invalid-feedback { font-size: .8rem; color: #dc3545; }
+    /* ── BUTTONS ── */
+    .btn-primary-custom {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 10px 24px; font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; transition: all .15s;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .9rem;
+    }
+    .btn-primary-custom:hover { background: #d4623c; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(232,115,74,.3); }
+    .btn-outline-custom {
+      background: none; color: var(--primary);
+      border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 9px 20px;
+      font-weight: 500; font-family: 'DM Sans', sans-serif;
+      cursor: pointer; transition: all .15s;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .9rem;
+    }
+    .btn-outline-custom:hover { border-color: var(--primary); background: rgba(26,58,92,.05); }
+    .btn-danger-sm {
+      background: none; color: #b93825;
+      border: 1px solid #f5c6bc; border-radius: 6px;
+      padding: 4px 10px; font-size: .8rem;
+      cursor: pointer; transition: all .15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-danger-sm:hover { background: var(--danger-bg); }
+    /* ── TABLE ── */
+    .table-custom { width: 100%; border-collapse: collapse; }
+    .table-custom th {
+      font-size: .78rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .05em;
+      color: var(--text-muted); padding: .75rem 1rem;
+      border-bottom: 2px solid var(--border);
+      text-align: left;
+    }
+    .table-custom td {
+      padding: .85rem 1rem; border-bottom: 1px solid var(--border);
+      font-size: .9rem; vertical-align: middle;
+    }
+    .table-custom tr:last-child td { border-bottom: none; }
+    .table-custom tr:hover td { background: var(--surface); }
+    .table-custom tbody tr { transition: background .1s; }
+    /* ── STUDENT CARD ── */
+    .student-card {
+      background: var(--card-bg); border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: .75rem;
+      display: flex; align-items: center; gap: 1rem;
+      cursor: pointer; transition: all .15s;
+    }
+    .student-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(232,115,74,.12); transform: translateY(-1px); }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: .95rem; flex-shrink: 0;
+    }
+    .student-info { flex: 1; }
+    .student-name { font-weight: 600; font-size: .95rem; }
+    .student-id { font-size: .78rem; color: var(--text-muted); }
+    /* ── BADGE ── */
+    .badge-grade {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: .8rem; font-weight: 600;
+    }
+    .badge-excellent { background: var(--badge-excellent); color: var(--badge-excellent-text); }
+    .badge-good      { background: var(--badge-good); color: var(--badge-good-text); }
+    .badge-average   { background: var(--badge-average); color: var(--badge-average-text); }
+    .badge-fail      { background: var(--badge-fail); color: var(--badge-fail-text); }
+    /* ── RESULTS ── */
+    .result-header {
+      background: linear-gradient(135deg, var(--primary) 0%, #2a5a8c 100%);
+      border-radius: 12px; padding: 1.5rem 2rem;
+      color: #fff; margin-bottom: 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .result-name { font-family: 'DM Serif Display', serif; font-size: 1.6rem; }
+    .result-id   { font-size: .85rem; opacity: .7; }
+    .average-circle {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(255,255,255,.15);
+      border: 3px solid rgba(255,255,255,.4);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .avg-num { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .avg-label { font-size: .68rem; opacity: .75; }
+    /* ── PROGRESS BAR ── */
+    .grade-bar-wrap { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .grade-bar { height: 100%; border-radius: 3px; transition: width .6s ease; }
+    /* ── ALERTS ── */
+    .alert-success-custom {
+      background: var(--success-bg); color: var(--success-text);
+      border: 1px solid #a8e0bf; border-radius: 10px;
+      padding: 12px 16px; font-size: .88rem;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .alert-danger-custom {
+      background: var(--danger-bg); color: var(--danger-text);
+      border: 1px solid #f5c6bc; border-radius: 10px;
+      padding: 12px 16px; font-size: .88rem;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .alert-hidden { display: none; }
+    /* ── SEARCH ── */
+    .search-wrap { position: relative; margin-bottom: 1.25rem; }
+    .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    .search-wrap input { padding-left: 36px; }
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center; padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-state i { font-size: 2.5rem; opacity: .35; display: block; margin-bottom: .75rem; }
+    /* ── RESPONSIVE ── */
+    @media(max-width: 600px) {
+      .stat-cards { grid-template-columns: 1fr; }
+      .nav-btn span { display: none; }
+      .hero h1 { font-size: 1.5rem; }
+      .page { padding: 1.5rem .75rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="navbar-brand" href="#" onclick="showPage('home')">
+    <i class="bi bi-mortarboard-fill"></i>
+    Edu<span>Track</span>
+  </a>
+  <div class="nav-links">
+    <button class="nav-btn active" id="nav-home" onclick="showPage('home')">
+      <i class="bi bi-house"></i><span>Accueil</span>
+    </button>
+    <button class="nav-btn" id="nav-add" onclick="showPage('add')">
+      <i class="bi bi-person-plus"></i><span>Ajouter</span>
+    </button>
+    <button class="nav-btn" id="nav-grades" onclick="showPage('grades')">
+      <i class="bi bi-pencil-square"></i><span>Notes</span>
+    </button>
+    <button class="nav-btn" id="nav-results" onclick="showPage('results')">
+      <i class="bi bi-bar-chart-line"></i><span>Résultats</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════ PAGE: HOME ═══════════ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <h1>Bienvenue sur EduTrack</h1>
+    <p>Gérez vos étudiants, saisissez leurs notes et consultez leurs résultats en toute simplicité.</p>
+  </div>
+
+  <div class="stat-cards" id="stat-cards">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <div class="stat-number" id="stat-students">0</div>
+        <div class="stat-label">Étudiants inscrits</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange"><i class="bi bi-journal-text"></i></div>
+      <div>
+        <div class="stat-number" id="stat-grades">0</div>
+        <div class="stat-label">Notes enregistrées</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-graph-up"></i></div>
+      <div>
+        <div class="stat-number" id="stat-avg">—</div>
+        <div class="stat-label">Moyenne générale</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><i class="bi bi-people"></i> Liste des étudiants</div>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="form-control" id="search-students" placeholder="Rechercher un étudiant…" oninput="renderStudentList()">
+  </div>
+
+  <div id="student-list-home"></div>
+</div>
+
+<!-- ═══════════ PAGE: AJOUTER ÉTUDIANT ═══════════ -->
+<div class="page" id="page-add">
+  <div class="section-title"><i class="bi bi-person-plus"></i> Ajouter un étudiant</div>
+
+  <div class="card-panel">
+    <div id="alert-add" class="alert-hidden"></div>
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Matricule étudiant *</label>
+        <input type="text" class="form-control" id="input-id" placeholder="ex: ETU2024001">
+        <div class="invalid-feedback" id="err-id"></div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Nom *</label>
+        <input type="text" class="form-control" id="input-nom" placeholder="ex: Diallo">
+        <div class="invalid-feedback" id="err-nom"></div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Prénom *</label>
+        <input type="text" class="form-control" id="input-prenom" placeholder="ex: Aminata">
+        <div class="invalid-feedback" id="err-prenom"></div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Date d'inscription</label>
+        <input type="date" class="form-control" id="input-date">
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem; display:flex; gap:10px;">
+      <button class="btn-primary-custom" onclick="addStudent()">
+        <i class="bi bi-plus-circle"></i> Enregistrer l'étudiant
+      </button>
+      <button class="btn-outline-custom" onclick="clearAddForm()">
+        <i class="bi bi-x-circle"></i> Annuler
+      </button>
+    </div>
+  </div>
+
+  <div class="section-title"><i class="bi bi-list-ul"></i> Étudiants enregistrés</div>
+  <div class="card-panel" style="padding:0; overflow:hidden;">
+    <div id="student-table-wrap">
+      <div class="empty-state"><i class="bi bi-person-x"></i> Aucun étudiant enregistré.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE: NOTES ═══════════ -->
+<div class="page" id="page-grades">
+  <div class="section-title"><i class="bi bi-pencil-square"></i> Saisir une note</div>
+
+  <div class="card-panel">
+    <div id="alert-grade" class="alert-hidden"></div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Étudiant *</label>
+        <select class="form-select" id="select-student">
+          <option value="">— Sélectionner un étudiant —</option>
+        </select>
+        <div class="invalid-feedback" id="err-select-student"></div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Matière *</label>
+        <select class="form-select" id="select-matiere">
+          <option value="">— Sélectionner une matière —</option>
+        </select>
+        <div class="invalid-feedback" id="err-matiere"></div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Note (0–20) *</label>
+        <input type="number" class="form-control" id="input-note" placeholder="ex: 14.5" min="0" max="20" step="0.5">
+        <div class="invalid-feedback" id="err-note"></div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-control" id="input-grade-date">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Commentaire</label>
+        <input type="text" class="form-control" id="input-comment" placeholder="Optionnel">
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem;">
+      <button class="btn-primary-custom" onclick="addGrade()">
+        <i class="bi bi-check-circle"></i> Enregistrer la note
+      </button>
+    </div>
+  </div>
+
+  <div class="section-title"><i class="bi bi-table"></i> Notes récentes</div>
+  <div class="card-panel" style="padding:0; overflow:hidden;">
+    <div id="grades-table-wrap">
+      <div class="empty-state"><i class="bi bi-journal-x"></i> Aucune note enregistrée.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE: RÉSULTATS ═══════════ -->
+<div class="page" id="page-results">
+  <div class="section-title"><i class="bi bi-bar-chart-line"></i> Résultats d'un étudiant</div>
+
+  <div class="card-panel">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <label class="form-label">Sélectionner un étudiant</label>
+        <select class="form-select" id="select-result-student" onchange="showResults()">
+          <option value="">— Choisir un étudiant —</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <button class="btn-primary-custom w-100" onclick="showResults()">
+          <i class="bi bi-search"></i> Afficher les résultats
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="results-area"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ─── DATA ───────────────────────────────────────────────
+const MATIERES = [
+  { id: 1, nom: 'Mathématiques', coeff: 4 },
+  { id: 2, nom: 'Informatique', coeff: 4 },
+  { id: 3, nom: 'Physique', coeff: 3 },
+  { id: 4, nom: 'Anglais', coeff: 2 },
+  { id: 5, nom: 'Français', coeff: 2 },
+  { id: 6, nom: 'Algorithmique', coeff: 3 },
+];
+
+let students = JSON.parse(localStorage.getItem('sms_students') || '[]');
+let grades   = JSON.parse(localStorage.getItem('sms_grades')   || '[]');
+
+function save() {
+  localStorage.setItem('sms_students', JSON.stringify(students));
+  localStorage.setItem('sms_grades',   JSON.stringify(grades));
+}
+
+// ─── NAV ────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'home')    renderHome();
+  if (name === 'add')     renderAddPage();
+  if (name === 'grades')  renderGradesPage();
+  if (name === 'results') renderResultsPage();
+}
+
+// ─── HELPERS ─────────────────────────────────────────────
+function initials(nom, prenom) {
+  return (prenom[0] || '') + (nom[0] || '');
+}
+
+function gradeBadge(v) {
+  if (v >= 16) return `<span class="badge-grade badge-excellent">Excellent</span>`;
+  if (v >= 12) return `<span class="badge-grade badge-good">Bien</span>`;
+  if (v >= 10) return `<span class="badge-grade badge-average">Passable</span>`;
+  return `<span class="badge-grade badge-fail">Insuffisant</span>`;
+}
+
+function gradeBarColor(v) {
+  if (v >= 16) return '#2d7a3a';
+  if (v >= 12) return '#1a4a9e';
+  if (v >= 10) return '#8a6200';
+  return '#9e2020';
+}
+
+function matiereById(id) {
+  return MATIERES.find(m => m.id == id) || { nom: '?', coeff: 1 };
+}
+
+function showAlert(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = type === 'success' ? 'alert-success-custom' : 'alert-danger-custom';
+  el.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
+  setTimeout(() => { el.className = 'alert-hidden'; }, 3500);
+}
+
+function clearValidation(...ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('is-invalid'); }
+  });
+}
+
+// ─── HOME ────────────────────────────────────────────────
+function renderHome() {
+  document.getElementById('stat-students').textContent = students.length;
+  document.getElementById('stat-grades').textContent   = grades.length;
+  const allAvg = students.map(s => studentAverage(s.id)).filter(v => v !== null);
+  document.getElementById('stat-avg').textContent = allAvg.length
+    ? (allAvg.reduce((a,b) => a+b, 0) / allAvg.length).toFixed(1)
+    : '—';
+  renderStudentList();
+}
+
+function renderStudentList() {
+  const q = (document.getElementById('search-students')?.value || '').toLowerCase();
+  const filtered = students.filter(s =>
+    (s.nom + ' ' + s.prenom + ' ' + s.id).toLowerCase().includes(q)
+  );
+  const wrap = document.getElementById('student-list-home');
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="empty-state"><i class="bi bi-person-x"></i>${q ? 'Aucun résultat.' : 'Aucun étudiant enregistré. <a href="#" onclick="showPage(\'add\')">Ajouter un étudiant</a>'}</div>`;
+    return;
+  }
+  wrap.innerHTML = filtered.map(s => {
+    const avg = studentAverage(s.id);
+    const nb  = grades.filter(g => g.studentId === s.id).length;
+    return `<div class="student-card" onclick="goToResults('${s.id}')">
+      <div class="avatar">${initials(s.nom, s.prenom).toUpperCase()}</div>
+      <div class="student-info">
+        <div class="student-name">${s.prenom} ${s.nom}</div>
+        <div class="student-id">${s.id}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:1.2rem;font-weight:700;color:var(--primary)">${avg !== null ? avg.toFixed(1) : '—'}</div>
+        <div style="font-size:.75rem;color:var(--text-muted)">${nb} note${nb>1?'s':''}</div>
+      </div>
+      <i class="bi bi-chevron-right" style="color:var(--text-muted);font-size:.85rem;margin-left:4px"></i>
+    </div>`;
+  }).join('');
+}
+
+function goToResults(id) {
+  showPage('results');
+  document.getElementById('select-result-student').value = id;
+  showResults();
+}
+
+// ─── ADD STUDENT ─────────────────────────────────────────
+function addStudent() {
+  clearValidation('input-id','input-nom','input-prenom');
+  const id     = document.getElementById('input-id').value.trim();
+  const nom    = document.getElementById('input-nom').value.trim();
+  const prenom = document.getElementById('input-prenom').value.trim();
+  const date   = document.getElementById('input-date').value || new Date().toISOString().slice(0,10);
+
+  let valid = true;
+  if (!id) {
+    document.getElementById('input-id').classList.add('is-invalid');
+    document.getElementById('err-id').textContent = 'Le matricule est requis.';
+    valid = false;
+  } else if (students.find(s => s.id === id)) {
+    document.getElementById('input-id').classList.add('is-invalid');
+    document.getElementById('err-id').textContent = 'Ce matricule existe déjà.';
+    valid = false;
+  }
+  if (!nom) {
+    document.getElementById('input-nom').classList.add('is-invalid');
+    document.getElementById('err-nom').textContent = 'Le nom est requis.';
+    valid = false;
+  }
+  if (!prenom) {
+    document.getElementById('input-prenom').classList.add('is-invalid');
+    document.getElementById('err-prenom').textContent = 'Le prénom est requis.';
+    valid = false;
+  }
+  if (!valid) return;
+
+  students.push({ id, nom, prenom, date });
+  save();
+  showAlert('alert-add', 'success', `Étudiant <strong>${prenom} ${nom}</strong> ajouté avec succès.`);
+  clearAddForm();
+  renderAddPage();
+}
+
+function clearAddForm() {
+  ['input-id','input-nom','input-prenom','input-date'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+    el.classList.remove('is-invalid');
+  });
+}
+
+function deleteStudent(id) {
+  if (!confirm('Supprimer cet étudiant et toutes ses notes ?')) return;
+  students = students.filter(s => s.id !== id);
+  grades   = grades.filter(g => g.studentId !== id);
+  save();
+  renderAddPage();
+}
+
+function renderAddPage() {
+  const wrap = document.getElementById('student-table-wrap');
+  if (!students.length) {
+    wrap.innerHTML = `<div class="empty-state"><i class="bi bi-person-x"></i> Aucun étudiant enregistré.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="table-custom">
+      <thead>
+        <tr>
+          <th>Matricule</th><th>Nom</th><th>Prénom</th><th>Date inscription</th><th>Notes</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${students.map(s => {
+          const nb = grades.filter(g => g.studentId === s.id).length;
+          return `<tr>
+            <td><code style="font-size:.82rem;background:var(--surface);padding:2px 6px;border-radius:4px">${s.id}</code></td>
+            <td><strong>${s.nom}</strong></td>
+            <td>${s.prenom}</td>
+            <td style="color:var(--text-muted)">${s.date}</td>
+            <td><span class="badge-grade badge-good">${nb} note${nb>1?'s':''}</span></td>
+            <td><button class="btn-danger-sm" onclick="deleteStudent('${s.id}')"><i class="bi bi-trash"></i> Supprimer</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ─── GRADES ──────────────────────────────────────────────
+function renderGradesPage() {
+  const sel = document.getElementById('select-student');
+  sel.innerHTML = '<option value="">— Sélectionner un étudiant —</option>' +
+    students.map(s => `<option value="${s.id}">${s.prenom} ${s.nom} (${s.id})</option>`).join('');
+
+  const selM = document.getElementById('select-matiere');
+  selM.innerHTML = '<option value="">— Sélectionner une matière —</option>' +
+    MATIERES.map(m => `<option value="${m.id}">${m.nom} (Coeff. ${m.coeff})</option>`).join('');
+
+  document.getElementById('input-grade-date').value = new Date().toISOString().slice(0,10);
+  renderGradesTable();
+}
+
+function addGrade() {
+  clearValidation('select-student','select-matiere','input-note');
+  const studentId = document.getElementById('select-student').value;
+  const matiereId = parseInt(document.getElementById('select-matiere').value);
+  const note      = parseFloat(document.getElementById('input-note').value);
+  const date      = document.getElementById('input-grade-date').value || new Date().toISOString().slice(0,10);
+  const comment   = document.getElementById('input-comment').value.trim();
+
+  let valid = true;
+  if (!studentId) {
+    document.getElementById('select-student').classList.add('is-invalid');
+    document.getElementById('err-select-student').textContent = 'Veuillez sélectionner un étudiant.';
+    valid = false;
+  }
+  if (!matiereId) {
+    document.getElementById('select-matiere').classList.add('is-invalid');
+    document.getElementById('err-matiere').textContent = 'Veuillez sélectionner une matière.';
+    valid = false;
+  }
+  if (isNaN(note) || note < 0 || note > 20) {
+    document.getElementById('input-note').classList.add('is-invalid');
+    document.getElementById('err-note').textContent = 'Entrez une note entre 0 et 20.';
+    valid = false;
+  }
+  if (!valid) return;
+
+  grades.push({ id: Date.now(), studentId, matiereId, note, date, comment });
+  save();
+  const s = students.find(x => x.id === studentId);
+  const m = matiereById(matiereId);
+  showAlert('alert-grade', 'success', `Note <strong>${note}/20</strong> en ${m.nom} enregistrée pour <strong>${s.prenom} ${s.nom}</strong>.`);
+  document.getElementById('input-note').value = '';
+  document.getElementById('input-comment').value = '';
+  renderGradesTable();
+}
+
+function deleteGrade(id) {
+  grades = grades.filter(g => g.id !== id);
+  save();
+  renderGradesTable();
+}
+
+function renderGradesTable() {
+  const wrap = document.getElementById('grades-table-wrap');
+  if (!grades.length) {
+    wrap.innerHTML = `<div class="empty-state"><i class="bi bi-journal-x"></i> Aucune note enregistrée.</div>`;
+    return;
+  }
+  const sorted = [...grades].sort((a,b) => b.id - a.id).slice(0, 50);
+  wrap.innerHTML = `
+    <table class="table-custom">
+      <thead>
+        <tr><th>Étudiant</th><th>Matière</th><th>Note</th><th>Mention</th><th>Date</th><th></th></tr>
+      </thead>
+      <tbody>
+        ${sorted.map(g => {
+          const s = students.find(x => x.id === g.studentId);
+          const m = matiereById(g.matiereId);
+          return `<tr>
+            <td>${s ? `<strong>${s.prenom} ${s.nom}</strong>` : g.studentId}</td>
+            <td>${m.nom}</td>
+            <td style="font-weight:700;font-size:1rem">${g.note}<span style="color:var(--text-muted);font-weight:400">/20</span></td>
+            <td>${gradeBadge(g.note)}</td>
+            <td style="color:var(--text-muted)">${g.date}</td>
+            <td><button class="btn-danger-sm" onclick="deleteGrade(${g.id})"><i class="bi bi-trash"></i></button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ─── RESULTS ─────────────────────────────────────────────
+function renderResultsPage() {
+  const sel = document.getElementById('select-result-student');
+  sel.innerHTML = '<option value="">— Choisir un étudiant —</option>' +
+    students.map(s => `<option value="${s.id}">${s.prenom} ${s.nom} (${s.id})</option>`).join('');
+}
+
+function studentAverage(id) {
+  const gs = grades.filter(g => g.studentId === id);
+  if (!gs.length) return null;
+  const totalCoeff = gs.reduce((a, g) => a + matiereById(g.matiereId).coeff, 0);
+  const total = gs.reduce((a, g) => a + g.note * matiereById(g.matiereId).coeff, 0);
+  return total / totalCoeff;
+}
+
+function showResults() {
+  const id   = document.getElementById('select-result-student').value;
+  const area = document.getElementById('results-area');
+  if (!id) { area.innerHTML = ''; return; }
+
+  const s  = students.find(x => x.id === id);
+  if (!s) { area.innerHTML = ''; return; }
+
+  const gs  = grades.filter(g => g.studentId === id);
+  const avg = studentAverage(id);
+
+  const mention = avg === null ? '—'
+    : avg >= 16 ? 'Félicitations'
+    : avg >= 14 ? 'Très Bien'
+    : avg >= 12 ? 'Bien'
+    : avg >= 10 ? 'Passable'
+    : 'Insuffisant';
+
+  const mentionBadge = avg === null ? '' : gradeBadge(avg);
+
+  area.innerHTML = `
+    <div class="result-header">
+      <div>
+        <div class="result-name">${s.prenom} ${s.nom}</div>
+        <div class="result-id">Matricule : ${s.id} &nbsp;|&nbsp; Inscrit le : ${s.date}</div>
+        <div style="margin-top:.75rem">${mentionBadge}</div>
+      </div>
+      <div class="average-circle">
+        <div class="avg-num">${avg !== null ? avg.toFixed(1) : '—'}</div>
+        <div class="avg-label">/ 20</div>
+      </div>
+    </div>
+
+    ${!gs.length ? `<div class="card-panel"><div class="empty-state"><i class="bi bi-journal-x"></i> Aucune note pour cet étudiant.</div></div>` : `
+    <div class="card-panel" style="padding:0;overflow:hidden;">
+      <table class="table-custom">
+        <thead>
+          <tr><th>Matière</th><th>Coeff.</th><th>Note</th><th>Mention</th><th>Progression</th><th>Commentaire</th></tr>
+        </thead>
+        <tbody>
+          ${gs.map(g => {
+            const m = matiereById(g.matiereId);
+            return `<tr>
+              <td><strong>${m.nom}</strong></td>
+              <td style="color:var(--text-muted)">${m.coeff}</td>
+              <td style="font-weight:700;font-size:1rem">${g.note}<span style="color:var(--text-muted);font-weight:400">/20</span></td>
+              <td>${gradeBadge(g.note)}</td>
+              <td style="min-width:120px">
+                <div class="grade-bar-wrap">
+                  <div class="grade-bar" style="width:${(g.note/20*100).toFixed(0)}%;background:${gradeBarColor(g.note)}"></div>
+                </div>
+              </td>
+              <td style="color:var(--text-muted);font-size:.85rem">${g.comment || '—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-panel" style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px">Moyenne pondérée</div>
+        <div style="font-size:2rem;font-weight:700;color:var(--primary)">${avg !== null ? avg.toFixed(2) : '—'}<span style="font-size:1rem;font-weight:400;color:var(--text-muted)">/20</span></div>
+      </div>
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px">Mention</div>
+        <div style="font-size:1.1rem;font-weight:600">${mention}</div>
+      </div>
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px">Matières évaluées</div>
+        <div style="font-size:1.1rem;font-weight:600">${gs.length} / ${MATIERES.length}</div>
+      </div>
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px">Résultat</div>
+        <div style="font-size:1.1rem;font-weight:600;color:${avg >= 10 ? 'var(--success-text)' : 'var(--danger-text)'}">${avg >= 10 ? '✓ Admis' : '✗ Ajourné'}</div>
+      </div>
+    </div>`}`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+document.getElementById('input-date').value = new Date().toISOString().slice(0,10);
+renderHome();
+</script>
+</body>
+</html>
